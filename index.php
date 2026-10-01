@@ -12,6 +12,6 @@ $php_version = phpversion();
 </head>
 <body>
   <h1><?= htmlspecialchars($site_title) ?></h1>
-  <p>Using PHP <?= htmlspecialchars($php_version) ?> for this site</p>
+  <p>Using PHP <?= htmlspecialchars($php_version) ?> for this site. Yay!</p>
 </body>
 </html>
