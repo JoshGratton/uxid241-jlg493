@@ -10,4 +10,5 @@ Users will be able to browse, add, and manage recipes.
 4. Visit `http://localhost/uxid241-jlg493` 
 
 ## AI use
-< "Used Claude for help finding and setting up the htdocs folder.">
+< Week1: "Used Claude for help finding and setting up the htdocs folder.">
+< Week2: "Used Claude for code to put results in a list format when searched.">
