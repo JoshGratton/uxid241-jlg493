@@ -1,53 +1,25 @@
 <?php
 declare(strict_types=1);
 
+require 'config.php';
+
 $site_title = 'My Cookbook';
 
-// Sample recipes to search through
-$recipes = [
-  'Ancho-Orange Chicken',
-  'Beef Medallions & Mushroom Sauce',
-  'Broccoli & Basil Pesto Sandwiches',
-  'Broccoli & Mozzarella Calzones',
-  'Bucatini Alfredo',
-  'Bucatini & Tomato Sauce',
-  'Cheesy Enchiladas Rojas',
-  'Crispy Fish Sandwiches',
-  'General Tso Chicken',
-  'Hoisin-Glazed Pork Chops',
-  'Honey-Butter Barramundi',
-  'Kale & Ricotta Quiche',
-  'Mexican-Spiced Barramundi',
-  'Mushroom & Potato Tacos',
-  'Parmesan-Crusted Chicken',
-  'Pimento Cheeseburgers',
-  'Pork Chorizo Tacos',
-  'Roasted Broccoli & Fregola Sarda Salad',
-  'Roasted Brussels Sprout & Freekeh Salad',
-  'Roasted Cauliflower Salad',
-  'Roasted Chicken & Fall Vegetables',
-  'Roasted Pork & Broccoli',
-  'Roasted Red Pepper Pasta',
-  'Roasted Squash Curry',
-  'Roasted Turkey Breast & Farro- Endive Salad',
-  'Salmon & Honey-Glazed Carrots',
-  'Seared Chicken & Mashed Potatoes',
-  'Seared Steaks & Garlic Butter',
-  'Shiitake & Hoisin Beef Burgers',
-  'Shrimp Fra Diavolo',
-  'Smoked Gouda & Mushroom Flatbread',
-  'Spicy Chicken Quesadillas',
-  'Spicy Pork & Korean Rice Cakes',
-  'Sweet & Sour Vegetable Stir-Fry',
-  'Thai Curry Chicken',
-  'Tilapia & Black Lentil Salad',
-  'Togarashi Chicken Lettuce Cups',
-  'Top Chef Ginger-Marinated Grassfed Steaks',
-  'Top Chef Seared Grassfed Steaks',
-  'Tuscan Chicken & Green Lentil Stew',
-];
+// Connect to the database
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// GET form handling
+try {
+  $conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+  mysqli_set_charset($conn, 'utf8mb4');
+} catch (mysqli_sql_exception $e) {
+  exit('Connection failed: ' . $e->getMessage());
+}
+
+// Read all recipes from the database
+$result = mysqli_query($conn, 'SELECT id, title FROM recipes ORDER BY title');
+$db_recipes = mysqli_fetch_all($result, MYSQLI_ASSOC);
+
+// GET search form
 $query = '';
 $results = [];
 $searched = false;
@@ -60,8 +32,8 @@ if (isset($_GET['q'])) {
     $error = 'Please enter a search term.';
   } else {
     $searched = true;
-    foreach ($recipes as $recipe) {
-      if (str_contains(strtolower($recipe), strtolower($query))) {
+    foreach ($db_recipes as $recipe) {
+      if (str_contains(strtolower($recipe['title']), strtolower($query))) {
         $results[] = $recipe;
       }
     }
@@ -78,9 +50,16 @@ if (isset($_GET['q'])) {
   <h1><?= htmlspecialchars($site_title) ?></h1>
   <p>Using PHP for this site. Yay!</p>
 
+  <h2>All recipes</h2>
+  <ul>
+    <?php foreach ($db_recipes as $recipe) : ?>
+      <li><?= htmlspecialchars($recipe['title']) ?></li>
+    <?php endforeach; ?>
+  </ul>
+
   <h2>Search recipes</h2>
   <form action="index.php" method="get">
-    <label for="q">Recipe name contains</label>
+    <label for="q">I want to make some...</label>
     <input type="search" id="q" name="q" value="<?= htmlspecialchars($query) ?>">
     <button type="submit">Search</button>
   </form>
@@ -93,7 +72,7 @@ if (isset($_GET['q'])) {
     <p><?= htmlspecialchars((string) count($results)) ?> result(s) for "<?= htmlspecialchars($query) ?>"</p>
     <ul>
       <?php foreach ($results as $recipe) : ?>
-        <li><?= htmlspecialchars($recipe) ?></li>
+        <li><?= htmlspecialchars($recipe['title']) ?></li>
       <?php endforeach; ?>
     </ul>
   <?php endif; ?>
