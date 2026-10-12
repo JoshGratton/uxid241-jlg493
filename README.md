@@ -12,3 +12,4 @@ Users will be able to browse, add, and manage recipes.
 ## AI use
 < Week1: "Used Claude for help finding and setting up the htdocs folder.">
 < Week2: "Used Claude for code to put results in a list format when searched.">
+< Week3: "Used Claude for help setting up and the code for schema.sql page.">
