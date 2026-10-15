@@ -16,7 +16,7 @@ try {
 }
 
 // Read all recipes from the database
-$result = mysqli_query($conn, 'SELECT id, title FROM recipes ORDER BY title');
+$result = mysqli_query($conn, 'SELECT id, title, ingredients FROM recipes ORDER BY title');
 $db_recipes = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 // GET search form
@@ -71,9 +71,12 @@ if (isset($_GET['q'])) {
   <?php if ($searched) : ?>
     <p><?= htmlspecialchars((string) count($results)) ?> result(s) for "<?= htmlspecialchars($query) ?>"</p>
     <ul>
-      <?php foreach ($results as $recipe) : ?>
-        <li><?= htmlspecialchars($recipe['title']) ?></li>
-      <?php endforeach; ?>
+     <?php foreach ($db_recipes as $recipe) : ?>
+  <li>
+    <?= htmlspecialchars($recipe['title']) ?>
+    <p><?= htmlspecialchars((string) ($recipe['ingredients'] ?? '')) ?></p>
+  </li>
+<?php endforeach; ?>
     </ul>
   <?php endif; ?>
 
