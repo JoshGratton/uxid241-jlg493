@@ -71,12 +71,12 @@ if (isset($_GET['q'])) {
   <?php if ($searched) : ?>
     <p><?= htmlspecialchars((string) count($results)) ?> result(s) for "<?= htmlspecialchars($query) ?>"</p>
     <ul>
-     <?php foreach ($db_recipes as $recipe) : ?>
-  <li>
-    <?= htmlspecialchars($recipe['title']) ?>
-    <p><?= htmlspecialchars((string) ($recipe['ingredients'] ?? '')) ?></p>
-  </li>
-<?php endforeach; ?>
+      <?php foreach ($results as $recipe) : ?>
+        <li>
+          <?= htmlspecialchars($recipe['title']) ?>
+          <p><?= nl2br(htmlspecialchars((string) ($recipe['ingredients'] ?? ''))) ?></p>
+        </li>
+      <?php endforeach; ?>
     </ul>
   <?php endif; ?>
 
