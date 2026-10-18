@@ -5,7 +5,6 @@ require 'config.php';
 
 $site_title = 'My Cookbook';
 
-// Connect to the database
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
@@ -15,11 +14,9 @@ try {
   exit('Connection failed: ' . $e->getMessage());
 }
 
-// Read all recipes from the database
-$result = mysqli_query($conn, 'SELECT id, title, ingredients FROM recipes ORDER BY title');
+$result = mysqli_query($conn, 'SELECT id, title FROM recipes ORDER BY title');
 $db_recipes = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
-// GET search form
 $query = '';
 $results = [];
 $searched = false;
@@ -32,11 +29,13 @@ if (isset($_GET['q'])) {
     $error = 'Please enter a search term.';
   } else {
     $searched = true;
-    foreach ($db_recipes as $recipe) {
-      if (str_contains(strtolower($recipe['title']), strtolower($query))) {
-        $results[] = $recipe;
-      }
-    }
+    $like = '%' . $query . '%';
+    $result = mysqli_execute_query(
+      $conn,
+      'SELECT id, title FROM recipes WHERE title LIKE ? ORDER BY title',
+      [$like]
+    );
+    $results = mysqli_fetch_all($result, MYSQLI_ASSOC);
   }
 }
 ?>
@@ -72,10 +71,7 @@ if (isset($_GET['q'])) {
     <p><?= htmlspecialchars((string) count($results)) ?> result(s) for "<?= htmlspecialchars($query) ?>"</p>
     <ul>
       <?php foreach ($results as $recipe) : ?>
-        <li>
-          <?= htmlspecialchars($recipe['title']) ?>
-          <p><?= nl2br(htmlspecialchars((string) ($recipe['ingredients'] ?? ''))) ?></p>
-        </li>
+        <li><?= htmlspecialchars($recipe['title']) ?></li>
       <?php endforeach; ?>
     </ul>
   <?php endif; ?>
