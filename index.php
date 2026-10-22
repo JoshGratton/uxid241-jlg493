@@ -92,6 +92,6 @@ if (isset($_GET['q'])) {
     </ul>
   <?php endif; ?>
 
-  <h1>.</h1>
+  
 </body>
 </html>
