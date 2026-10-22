@@ -23,7 +23,7 @@ $result = mysqli_query($conn, 'SELECT id, title FROM recipes ORDER BY title');
 
 $db_recipes = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
-// Search variables — set defaults before checking if the form was submitted
+// Search variables 
 $query = '';
 $results = [];
 $searched = false;
@@ -92,5 +92,6 @@ if (isset($_GET['q'])) {
     </ul>
   <?php endif; ?>
 
+  <h1>.</h1>
 </body>
 </html>
