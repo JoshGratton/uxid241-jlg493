@@ -2,12 +2,12 @@
 // Enforces strict data types across the file
 declare(strict_types=1);
 
-// Loads database credentials from config.php ($db_host, $db_user, etc.)
+
 require 'config.php';
 
 $site_title = 'My Cookbook';
 
-// Makes mysqli throw exceptions on errors instead of failing silently
+
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Connect to the database; exit with an error message if it fails
@@ -20,7 +20,7 @@ try {
 
 // Fetch all recipes from the database, sorted alphabetically
 $result = mysqli_query($conn, 'SELECT id, title FROM recipes ORDER BY title');
-// MYSQLI_ASSOC returns each row as an associative array e.g. ['id' => 1, 'title' => 'Pasta']
+
 $db_recipes = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 // Search variables — set defaults before checking if the form was submitted
@@ -37,8 +37,8 @@ if (isset($_GET['q'])) {
     $error = 'Please enter a search term.';
   } else {
     $searched = true;
-    $like = '%' . $query . '%'; // % is a wildcard — matches anything before or after the term
-    // Prepared statement: the ? is a safe placeholder for user input, prevents SQL injection
+    $like = '%' . $query . '%'; 
+
     $result = mysqli_execute_query(
       $conn,
       'SELECT id, title FROM recipes WHERE title LIKE ? ORDER BY title',
@@ -61,7 +61,7 @@ if (isset($_GET['q'])) {
 
   <h2>All recipes</h2>
   <ul>
-    <!-- foreach with colon/endforeach syntax for mixing PHP and HTML -->
+    
     <?php foreach ($db_recipes as $recipe) : ?>
       <li><?= htmlspecialchars($recipe['title']) ?></li>
     <?php endforeach; ?>
@@ -71,7 +71,7 @@ if (isset($_GET['q'])) {
   <!-- method="get" puts the search term in the URL as ?q=... -->
   <form action="index.php" method="get">
     <label for="q">I want to make some...</label>
-    <!-- value= repopulates the input with what the user typed after submitting -->
+    
     <input type="search" id="q" name="q" value="<?= htmlspecialchars($query) ?>">
     <button type="submit">Search</button>
   </form>
