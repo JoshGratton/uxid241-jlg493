@@ -132,7 +132,7 @@ $tip = mysqli_fetch_assoc($tip_result);
       </ul>
     <?php endif; ?>
 
-    <!-- Cooking steps -->
+    <!-- all the cooking steps -->
     <?php if (!empty($steps)) : ?>
       <h3>Instructions</h3>
       <ol class="steps-list">
