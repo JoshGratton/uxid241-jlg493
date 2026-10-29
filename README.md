@@ -17,4 +17,4 @@ A web app built with PHP and MySQL for UXID241 at Drexel University. By the end 
 < Week3: "Used Claude for help setting up and the code for schema.sql page.">
 < Week4: "Used Claude so not all titles and ingredients showed up when I search for something">
 < Week5: "Used Claude for help putting all of the recipe information into my schema">
-< Week6: "Used Claude for help creating the category selector as well as the banners for each recipe">
+< Week6: "Used Claude for help creating the category selector as well as the banners for each recipe ad recipe page">
