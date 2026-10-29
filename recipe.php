@@ -16,7 +16,7 @@ try {
   exit('Connection failed: ' . $e->getMessage());
 }
 
-// Get the recipe ID from the URL — e.g. recipe.php?id=3
+// Get the recipe ID from the URL  e.g. recipe.php?id=3
 // (int) cast ensures it's always a whole number, never a string
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
@@ -26,7 +26,7 @@ if ($id <= 0) {
   exit;
 }
 
-// Fetch the recipe row — prepared statement because $id came from the URL
+// Fetch the recipe row  prepared statement because $id came from the URL
 $result = mysqli_execute_query(
   $conn,
   'SELECT r.id, r.title, r.subtitle, r.description, r.servings, r.main_image, c.name AS category
