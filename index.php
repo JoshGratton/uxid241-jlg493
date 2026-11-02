@@ -127,21 +127,23 @@ if ($query !== '' || $category_id > 0) {
 
   <!-- Recipe grid — each card links to the detail page -->
   <div class="recipe-grid">
-    <?php foreach ($recipes as $recipe) : ?>
-      <a href="recipe.php?id=<?= htmlspecialchars((string) $recipe['id']) ?>" class="recipe-card">
-        <?php if (!empty($recipe['main_image'])) : ?>
-          <img src="<?= htmlspecialchars($recipe['main_image']) ?>" alt="<?= htmlspecialchars($recipe['title']) ?>">
-        <?php else : ?>
-          <!-- Placeholder if no image exists yet -->
-          <div style="height:180px; background:#e4e4e7; display:flex; align-items:center; justify-content:center; color:#999;">No image</div>
+   <?php foreach ($recipes as $recipe): ?>
+    <a href="recipe.php?id=<?= $recipe['id'] ?>" class="recipe-card">
+        <?php if ($recipe['main_image']): ?>
+            <img src="<?= htmlspecialchars($recipe['main_image']) ?>"
+                 alt="<?= htmlspecialchars($recipe['title']) ?>">
+        <?php else: ?>
+            <div class="recipe-card-placeholder">🍽️</div>
         <?php endif; ?>
         <div class="recipe-card-body">
-          <h3><?= htmlspecialchars($recipe['title']) ?></h3>
-          <span class="category"><?= htmlspecialchars($recipe['category'] ?? '') ?></span>
-          <p class="meta">Serves <?= htmlspecialchars((string) ($recipe['servings'] ?? '')) ?></p>
+            <?php if ($recipe['category']): ?>
+                <div class="recipe-card-category"><?= htmlspecialchars($recipe['category']) ?></div>
+            <?php endif; ?>
+            <h3><?= htmlspecialchars($recipe['title']) ?></h3>
+            <div class="recipe-card-meta">Serves <?= htmlspecialchars((string)$recipe['servings']) ?></div>
         </div>
-      </a>
-    <?php endforeach; ?>
+    </a>
+<?php endforeach; ?>
   </div>
 
 </div>
