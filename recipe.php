@@ -12,7 +12,7 @@ if ($id <= 0) {
 
 // Load recipe
 $recipe = mysqli_fetch_assoc(
-    mysqli_execute_query($conn, 'SELECT * FROM recipes WHERE id = ?', [$id])
+    mysqli_execute_query($conn, 'SELECT id, slug, title, subtitle, category_id AS category, servings, description, main_image, created_at FROM recipes WHERE id = ?', [$id])
 );
 if ($recipe === null) {
     header('Location: index.php');
@@ -33,13 +33,13 @@ $steps = mysqli_fetch_all(
 
 // Load tips
 $tips = mysqli_fetch_all(
-    mysqli_execute_query($conn, 'SELECT tip FROM tips WHERE recipe_id = ? ORDER BY id', [$id]),
+    mysqli_execute_query($conn, 'SELECT tip_text AS tip FROM tips WHERE recipe_id = ? ORDER BY id', [$id]),
     MYSQLI_ASSOC
 );
 
 // Site title
-$row = mysqli_fetch_assoc(mysqli_execute_query($conn, "SELECT value FROM settings WHERE key_name = 'site_title'"));
-$site_title = $row['value'] ?? 'The Cookbook';
+
+$site_title = 'The Cookbook';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -67,7 +67,7 @@ $site_title = $row['value'] ?? 'The Cookbook';
 
     <div class="recipe-detail-header">
         <?php if (!empty($recipe['category'])): ?>
-            <p class="recipe-detail-category"><?= htmlspecialchars($recipe['category']) ?></p>
+            <p class="recipe-detail-category"><?= htmlspecialchars((string)($recipe['category'] ?? '')) ?></p>
         <?php endif; ?>
 
         <h1><?= htmlspecialchars($recipe['title']) ?></h1>
@@ -142,7 +142,7 @@ $site_title = $row['value'] ?? 'The Cookbook';
                 <li>
                     <div class="step-row">
                         <span class="step-number"><?= (int) $step['step_number'] ?></span>
-                        <p><?= htmlspecialchars($step['instruction']) ?></p>
+                        <p><?= htmlspecialchars($step['instructions']) ?></p>
                     </div>
                     <?php if (!empty($step['image'])): ?>
                         <img src="<?= htmlspecialchars($step['image']) ?>"

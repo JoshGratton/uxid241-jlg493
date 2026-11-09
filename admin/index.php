@@ -4,7 +4,7 @@ require_once '../require_login.php';
 require_once '../config.php';
 
 $recipes = mysqli_fetch_all(
-    mysqli_execute_query($conn, 'SELECT id, title, category, created_at FROM recipes ORDER BY created_at DESC'),
+    mysqli_execute_query($conn, 'SELECT id, title, category_id AS category, created_at FROM recipes ORDER BY created_at DESC'),
     MYSQLI_ASSOC
 );
 ?>
@@ -53,7 +53,7 @@ $recipes = mysqli_fetch_all(
             <tr>
                 <td><?= (int) $r['id'] ?></td>
                 <td><?= htmlspecialchars($r['title']) ?></td>
-                <td><?= htmlspecialchars($r['category'] ?? '—') ?></td>
+                <td><?= (string)($r['category'] ?? '—') ?></td>
                 <td><?= htmlspecialchars(substr($r['created_at'] ?? '', 0, 10)) ?></td>
                 <td>
                     <a href="../recipe.php?id=<?= (int) $r['id'] ?>">View</a>
