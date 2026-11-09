@@ -2,7 +2,7 @@
 declare(strict_types=1);
 session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
 session_start();
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 if ($id <= 0) {
