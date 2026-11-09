@@ -1,160 +1,168 @@
 <?php
 declare(strict_types=1);
+session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
+session_start();
+require_once 'config.php';
 
-require 'config.php';
-
-$site_title = 'My Cookbook';
-
-// Makes mysqli throw exceptions on errors instead of failing silently
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-
-// Connect to the database
-try {
-  $conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
-  mysqli_set_charset($conn, 'utf8mb4');
-} catch (mysqli_sql_exception $e) {
-  exit('Connection failed: ' . $e->getMessage());
-}
-
-// Get the recipe ID from the URL  e.g. recipe.php?id=3
-// (int) cast ensures it's always a whole number, never a string
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-
-// If no valid ID was given, send the user back to the homepage
 if ($id <= 0) {
-  header('Location: index.php');
-  exit;
+    header('Location: index.php');
+    exit;
 }
 
-// Fetch the recipe row  prepared statement because $id came from the URL
-$result = mysqli_execute_query(
-  $conn,
-  'SELECT r.id, r.title, r.subtitle, r.description, r.servings, r.main_image, c.name AS category
-   FROM recipes r
-   LEFT JOIN categories c ON r.category_id = c.id
-   WHERE r.id = ?',
-  [$id]
+// Load recipe
+$recipe = mysqli_fetch_assoc(
+    mysqli_execute_query($conn, 'SELECT * FROM recipes WHERE id = ?', [$id])
 );
-$recipe = mysqli_fetch_assoc($result);
-
-// If no recipe was found for that ID, go back to homepage
-if (!$recipe) {
-  header('Location: index.php');
-  exit;
+if ($recipe === null) {
+    header('Location: index.php');
+    exit;
 }
 
-// Fetch all ingredients for this recipe, in sort order
-$ing_result = mysqli_execute_query(
-  $conn,
-  'SELECT full_text FROM ingredients WHERE recipe_id = ? ORDER BY sort_order',
-  [$id]
+// Load ingredients
+$ingredients = mysqli_fetch_all(
+    mysqli_execute_query($conn, 'SELECT * FROM ingredients WHERE recipe_id = ? ORDER BY id', [$id]),
+    MYSQLI_ASSOC
 );
-$ingredients = mysqli_fetch_all($ing_result, MYSQLI_ASSOC);
 
-// Fetch all cooking steps for this recipe, in step order
-$steps_result = mysqli_execute_query(
-  $conn,
-  'SELECT step_number, step_title, instructions FROM steps WHERE recipe_id = ? ORDER BY step_number',
-  [$id]
+// Load steps (including image column)
+$steps = mysqli_fetch_all(
+    mysqli_execute_query($conn, 'SELECT * FROM steps WHERE recipe_id = ? ORDER BY step_number', [$id]),
+    MYSQLI_ASSOC
 );
-$steps = mysqli_fetch_all($steps_result, MYSQLI_ASSOC);
 
-// Fetch the tip for this recipe (there's at most one per recipe)
-$tip_result = mysqli_execute_query(
-  $conn,
-  'SELECT tip_title, tip_text FROM tips WHERE recipe_id = ?',
-  [$id]
+// Load tips
+$tips = mysqli_fetch_all(
+    mysqli_execute_query($conn, 'SELECT tip FROM tips WHERE recipe_id = ? ORDER BY id', [$id]),
+    MYSQLI_ASSOC
 );
-$tip = mysqli_fetch_assoc($tip_result);
+
+// Site title
+$row = mysqli_fetch_assoc(mysqli_execute_query($conn, "SELECT value FROM settings WHERE key_name = 'site_title'"));
+$site_title = $row['value'] ?? 'The Cookbook';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= htmlspecialchars($recipe['title']) ?> &mdash; <?= htmlspecialchars($site_title) ?></title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($recipe['title']) ?> — <?= htmlspecialchars($site_title) ?></title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header>
-  <h1><a href="index.php"><?= htmlspecialchars($site_title) ?></a></h1>
-  <nav>
-    <a href="index.php">Home</a>
-  </nav>
+    <div class="container">
+        <h1><a href="index.php"><?= htmlspecialchars($site_title) ?></a></h1>
+        <nav>
+            <a href="index.php">Home</a>
+            <a href="login.php">Admin</a>
+        </nav>
+    </div>
 </header>
 
-<div class="container">
+<div class="recipe-detail">
 
-  <a href="index.php" class="back-link">&larr; Back to all recipes</a>
+    <a href="index.php" class="back-link">← All recipes</a>
 
-  <div class="recipe-detail">
+    <div class="recipe-detail-header">
+        <?php if (!empty($recipe['category'])): ?>
+            <p class="recipe-detail-category"><?= htmlspecialchars($recipe['category']) ?></p>
+        <?php endif; ?>
 
-    <h2><?= htmlspecialchars($recipe['title']) ?></h2>
+        <h1><?= htmlspecialchars($recipe['title']) ?></h1>
 
-    <?php if (!empty($recipe['subtitle'])) : ?>
-      <p class="subtitle"><?= htmlspecialchars($recipe['subtitle']) ?></p>
-    <?php endif; ?>
+        <?php if (!empty($recipe['subtitle'])): ?>
+            <p class="recipe-detail-subtitle"><?= htmlspecialchars($recipe['subtitle']) ?></p>
+        <?php endif; ?>
 
-    <!-- Meta row: category and servings -->
-    <div class="meta-row">
-      <?php if (!empty($recipe['category'])) : ?>
-        <span><strong>Category:</strong> <?= htmlspecialchars($recipe['category']) ?></span>
-      <?php endif; ?>
-      <?php if (!empty($recipe['servings'])) : ?>
-        <span><strong>Serves:</strong> <?= htmlspecialchars((string) $recipe['servings']) ?></span>
-      <?php endif; ?>
+        <p class="recipe-detail-meta">
+            <?php if (!empty($recipe['servings'])): ?>
+                Serves <?= (int) $recipe['servings'] ?>
+            <?php endif; ?>
+            <?php if (!empty($recipe['prep_time'])): ?>
+                &nbsp;·&nbsp; <?= (int) $recipe['prep_time'] ?> min prep
+            <?php endif; ?>
+            <?php if (!empty($recipe['cook_time'])): ?>
+                &nbsp;·&nbsp; <?= (int) $recipe['cook_time'] ?> min cook
+            <?php endif; ?>
+        </p>
     </div>
 
-    <?php if (!empty($recipe['main_image'])) : ?>
-      <img class="dish-image" src="<?= htmlspecialchars($recipe['main_image']) ?>" alt="<?= htmlspecialchars($recipe['title']) ?>">
+    <?php if (!empty($recipe['main_image'])): ?>
+        <img src="<?= htmlspecialchars($recipe['main_image']) ?>"
+             alt="<?= htmlspecialchars($recipe['title']) ?>"
+             class="recipe-detail-image">
     <?php endif; ?>
 
-    <?php if (!empty($recipe['description'])) : ?>
-      <p><?= htmlspecialchars($recipe['description']) ?></p>
+    <?php if (!empty($recipe['description'])): ?>
+        <p class="recipe-detail-description"><?= htmlspecialchars($recipe['description']) ?></p>
     <?php endif; ?>
 
-    <!-- Tip box — shown if this recipe has a tip -->
-    <?php if ($tip) : ?>
-      <div class="tip-box">
-        <h4><?= htmlspecialchars($tip['tip_title'] ?? 'Tip') ?></h4>
-        <p><?= htmlspecialchars($tip['tip_text'] ?? '') ?></p>
-      </div>
-    <?php endif; ?>
-
-    <!-- Ingredients list -->
-    <?php if (!empty($ingredients)) : ?>
-      <h3>Ingredients</h3>
-      <ul class="ingredients-list">
-        <?php foreach ($ingredients as $ing) : ?>
-          <li><?= htmlspecialchars($ing['full_text']) ?></li>
+    <?php if (!empty($tips)): ?>
+        <?php foreach ($tips as $tip): ?>
+        <div class="tip-box">
+            <strong>Chef's tip</strong>
+            <?= htmlspecialchars($tip['tip']) ?>
+        </div>
         <?php endforeach; ?>
-      </ul>
     <?php endif; ?>
 
-    <!-- all the cooking steps -->
-    <?php if (!empty($steps)) : ?>
-      <h3>Instructions</h3>
-      <ol class="steps-list">
-        <?php foreach ($steps as $step) : ?>
-          <li>
-            <div class="step-number"><?= htmlspecialchars((string) $step['step_number']) ?></div>
-            <div class="step-content">
-              <?php if (!empty($step['step_title'])) : ?>
-                <h4><?= htmlspecialchars($step['step_title']) ?></h4>
-              <?php endif; ?>
-              <p><?= htmlspecialchars($step['instructions'] ?? '') ?></p>
-            </div>
-          </li>
-        <?php endforeach; ?>
-      </ol>
-    <?php endif; ?>
+    <hr class="recipe-divider">
 
-  </div>
-</div>
+    <div class="recipe-body">
+
+        <!-- Ingredients column -->
+        <div class="ingredients-col">
+            <p class="recipe-section-title">Ingredients</p>
+            <?php if (!empty($ingredients)): ?>
+            <ul class="ingredients-list">
+                <?php foreach ($ingredients as $ing): ?>
+                <li>
+                    <?php if (!empty($ing['quantity'])): ?>
+                        <strong><?= htmlspecialchars($ing['quantity']) ?></strong>
+                        <?= htmlspecialchars($ing['unit'] ?? '') ?>
+                        &nbsp;
+                    <?php endif; ?>
+                    <?= htmlspecialchars($ing['name']) ?>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+            <?php else: ?>
+                <p style="color:var(--text-dim);font-size:0.9rem;">No ingredients listed.</p>
+            <?php endif; ?>
+        </div>
+
+        <!-- Steps column -->
+        <div class="steps-col">
+            <p class="recipe-section-title">Instructions</p>
+            <?php if (!empty($steps)): ?>
+            <ol class="steps-list">
+                <?php foreach ($steps as $step): ?>
+                <li>
+                    <div class="step-row">
+                        <span class="step-number"><?= (int) $step['step_number'] ?></span>
+                        <p><?= htmlspecialchars($step['instruction']) ?></p>
+                    </div>
+                    <?php if (!empty($step['image'])): ?>
+                        <img src="<?= htmlspecialchars($step['image']) ?>"
+                             alt="Step <?= (int) $step['step_number'] ?>"
+                             class="step-image">
+                    <?php endif; ?>
+                </li>
+                <?php endforeach; ?>
+            </ol>
+            <?php else: ?>
+                <p style="color:var(--text-dim);font-size:0.9rem;">No steps listed.</p>
+            <?php endif; ?>
+        </div>
+
+    </div><!-- /recipe-body -->
+
+</div><!-- /recipe-detail -->
 
 <footer>
-  <p>My Cookbook &mdash; UXID241 &mdash; Drexel University</p>
+    <a href="index.php"><?= htmlspecialchars($site_title) ?></a>
 </footer>
 
 </body>

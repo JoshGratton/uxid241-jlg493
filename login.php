@@ -37,10 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
     $user = mysqli_fetch_assoc($result);
 
-    // Check that the row exists AND the password matches the stored hash
-    if ($user !== null && password_verify($plain, $user['password_hash'])) {
+    
+    if ($user !== null && password_verify($plain, $user['password_hash'])) { //It takes the password the user typed and the hash from the database and checks if they match
         // Swap to a fresh session id to prevent session fixation
-        session_regenerate_id(true);
+        session_regenerate_id(true); //This gives the user a brand new session ID the moment they successfully log in
 
         // Store ONLY the user id — look everything else up when needed
         $_SESSION['user_id'] = $user['id'];
